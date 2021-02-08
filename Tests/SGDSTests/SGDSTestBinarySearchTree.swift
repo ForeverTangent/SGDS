@@ -18,7 +18,7 @@ class SGDSTestBinarySearchTree: XCTestCase {
 	}
 
 	func testBinarySearchNode() {
-		let test = BinarySearchTreeNode(data: 5)
+		let test = BSTNode(data: 5)
 		XCTAssertEqual(test.data, 5, "Not Equal to 5")
 	}
 
