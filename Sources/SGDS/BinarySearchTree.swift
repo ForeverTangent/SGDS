@@ -10,28 +10,15 @@ import Foundation
 class BinarySearchTreeNode<T: Comparable> {
 	init(data: T) { self.data = data }
 	var data: T
-	var leftChild: BinarySearchTreeNode<T>?
-	var rightChild: BinarySearchTreeNode<T>?
-
+	var left: BinarySearchTreeNode<T>?
+	var right: BinarySearchTreeNode<T>?
 
 	public var height: Int {
 		get {
-			let theLeftHeight = leftChild?.height ?? 0
-			let theRightRight = rightChild?.height ?? 0
+			let theLeftHeight = left?.height ?? 0
+			let theRightRight = right?.height ?? 0
 			return max(theLeftHeight, theRightRight) + 1
 		}
-	}
-
-	public var balanceFactor: Int {
-		leftHeight - rightHeight
-	}
-
-	public var leftHeight: Int {
-		leftChild?.height ?? -1
-	}
-
-	public var rightHeight: Int {
-		rightChild?.height ?? -1
 	}
 
 }
@@ -39,8 +26,8 @@ class BinarySearchTreeNode<T: Comparable> {
 extension BinarySearchTreeNode: CustomStringConvertible {
 	var description: String {
 
-		let theLeftDescription = leftChild?.description ?? ""
-		let theRightDescription = rightChild?.description ?? ""
+		let theLeftDescription = left?.description ?? ""
+		let theRightDescription = right?.description ?? ""
 
 		return "value: \(self.data), left = [ \(theLeftDescription) ], right = [ \(theRightDescription) ]"
 	}
@@ -61,7 +48,6 @@ class BinarySearchTree<T: Comparable> {
 		return theRoot.height
 	}
 
-
 	private var isEmpty: Bool {
 		get {
 			guard root != nil else { return false }
@@ -70,14 +56,33 @@ class BinarySearchTree<T: Comparable> {
 	}
 
 
-	private var opCount = 0
-	private var opCountLimit = 5
-
-
-	// INIT: =
-
-
 	// MARK: - Class Methods
+
+
+	public func containsNodeWith(_ data: T) -> Bool {
+		guard getNodeWithData(data) != nil else { return false }
+		return true
+	}
+
+
+	public func getNodeWithData(_ data: T) -> BinarySearchTreeNode<T>? {
+		var current = root
+
+		while let theNode = current {
+			if theNode.data == data {
+				return theNode
+			}
+			if data < theNode.data {
+				current = theNode.left
+			} else {
+				current = theNode.right
+			}
+		}
+
+		return nil
+	}
+
+
 
 	// MARK: Insert
 
@@ -89,19 +94,20 @@ class BinarySearchTree<T: Comparable> {
 		}
 	}
 
+
 	private func insertData(_ data: T, into node: BinarySearchTreeNode<T>) -> BinarySearchTreeNode<T> {
 
 		if data < node.data {
-			if let theLeftNode = node.leftChild {
-				node.leftChild = insertData(data, into: theLeftNode)
+			if let theLeftNode = node.left {
+				node.left = insertData(data, into: theLeftNode)
 			} else {
-				node.leftChild = BinarySearchTreeNode(data: data)
+				node.left = BinarySearchTreeNode(data: data)
 			}
 		} else if node.data < data {
-			if let theRightNode = node.rightChild {
-				node.rightChild = insertData(data, into: theRightNode)
+			if let theRightNode = node.right {
+				node.right = insertData(data, into: theRightNode)
 			} else {
-				node.rightChild = BinarySearchTreeNode(data: data)
+				node.right = BinarySearchTreeNode(data: data)
 			}
 		}
 
@@ -114,13 +120,11 @@ class BinarySearchTree<T: Comparable> {
 
 	private func getBalanceFactorOfNode(_ node: BinarySearchTreeNode<T>) -> Int {
 
-		let theLeftNodeHeight = node.leftChild?.height ?? 0
-		let theRightNodeHeight = node.rightChild?.height ?? 0
+		let theLeftNodeHeight = node.left?.height ?? 0
+		let theRightNodeHeight = node.right?.height ?? 0
 
 		return theLeftNodeHeight - theRightNodeHeight
 	}
-
-
 
 
 	/**
@@ -132,28 +136,29 @@ class BinarySearchTree<T: Comparable> {
 	*/
 	private func rotateLeft(_ node: BinarySearchTreeNode<T>) -> BinarySearchTreeNode<T> {
 
-		guard let thePivot = node.rightChild else { return node }
+		guard let thePivot = node.right else { return node }
 
-		node.rightChild = thePivot.leftChild
-		thePivot.leftChild = node
+		node.right = thePivot.left
+		thePivot.left = node
 
 		return thePivot
 
 	}
 
+
 	/**
-	------(3)                  (2)
+	------(4)                  (2)
 	-------/                   /     \
-	---(2)        -->  (1)         (3)
-	---/
-	(1)
+	---(2)        -->  (1)         (4)
+	---/    \                        /
+	(1)    (3)                 (3)
 	*/
 	private func rotateRight(_ node: BinarySearchTreeNode<T>) -> BinarySearchTreeNode<T> {
 
-		guard let thePivot = node.leftChild else { return node }
+		guard let thePivot = node.left else { return node }
 
-		node.leftChild = thePivot.rightChild
-		thePivot.rightChild = node
+		node.left = thePivot.right
+		thePivot.right = node
 
 		return thePivot
 
@@ -161,18 +166,17 @@ class BinarySearchTree<T: Comparable> {
 
 
 	private func rotateRightLeft(_ node: BinarySearchTreeNode<T>) -> BinarySearchTreeNode<T> {
-		guard let theRightChild = node.rightChild else { return node }
-		node.rightChild = rotateRight(theRightChild)
+		guard let theRightChild = node.right else { return node }
+		node.right = rotateRight(theRightChild)
 		return rotateLeft(node)
 	}
 
 
 	private func rotateLeftRight(_ node: BinarySearchTreeNode<T>) -> BinarySearchTreeNode<T> {
-		guard let theLeftChild = node.leftChild else { return node }
-		node.leftChild = rotateLeft(theLeftChild)
+		guard let theLeftChild = node.left else { return node }
+		node.left = rotateLeft(theLeftChild)
 		return rotateRight(node)
 	}
-
 
 
 	private func balanceNode(_ node: BinarySearchTreeNode<T>) -> BinarySearchTreeNode<T>  {
@@ -182,7 +186,7 @@ class BinarySearchTree<T: Comparable> {
 		switch balanceFactor {
 			case 2:
 				if
-					let theLeftChild = node.leftChild,
+					let theLeftChild = node.left,
 				   	getBalanceFactorOfNode(theLeftChild) == -1 {
 						return rotateLeftRight(node)
 				} else {
@@ -190,7 +194,7 @@ class BinarySearchTree<T: Comparable> {
 				}
 			case -2:
 				if
-					let theRightChild = node.rightChild,
+					let theRightChild = node.right,
 					getBalanceFactorOfNode(theRightChild) == 1 {
 						return rotateRightLeft(node)
 				} else {
@@ -203,23 +207,70 @@ class BinarySearchTree<T: Comparable> {
 	}
 
 
+	public func transverseInOrder(_ onVisit: (T)->Void) {
+		traverseInOrder(root, onVisit)
+	}
+
+
+	private func traverseInOrder(_ node: BinarySearchTreeNode<T>?, _ onVisit: (T) -> Void) {
+		guard let theNode = node else { return }
+		traverseInOrder(theNode.left, onVisit)
+		onVisit(theNode.data)
+		traverseInOrder(theNode.right, onVisit)
+	}
+
+
+	public func transversePostOrder(_ onVisit: (T)->Void) {
+		traversePostOrder(root, onVisit)
+	}
+
+
+	private func traversePostOrder(_ node: BinarySearchTreeNode<T>?, _ onVisit: (T) -> Void) {
+		guard let theNode = node else { return }
+		traversePostOrder(theNode.right, onVisit)
+		onVisit(theNode.data)
+		traversePostOrder(theNode.left, onVisit)
+	}
+
+
+	public func getMinimum() -> T? {
+		return getMinimum(root)
+	}
+
+
+	private func getMinimum(_ node: BinarySearchTreeNode<T>?) -> T? {
+		guard let theNode = node else { return nil }
+
+		if let theLeftNode = theNode.left {
+			return getMinimum(theLeftNode)
+		}
+
+		return theNode.data
+	}
+
+
+	public func getMaximum() -> T? {
+		return getMaximum(root)
+	}
+
+
+	private func getMaximum(_ node: BinarySearchTreeNode<T>?) -> T? {
+		guard let theNode = node else { return nil }
+
+		if let theRightNode = theNode.right {
+			return getMaximum(theRightNode)
+		}
+
+		return theNode.data
+	}
+
+
 	public func printAllInOrder() {
 		var allData = [T]()
 		transverseInOrder { (theData) in
 			allData.append(theData)
 		}
 		print(allData)
-	}
-
-	public func transverseInOrder(_ onVisit: (T)->Void) {
-		traverseInOrder(root, onVisit)
-	}
-
-	private func traverseInOrder(_ node: BinarySearchTreeNode<T>?, _ onVisit: (T) -> Void) {
-		guard let theNode = node else { return }
-		traverseInOrder(theNode.leftChild, onVisit)
-		onVisit(theNode.data)
-		traverseInOrder(theNode.rightChild, onVisit)
 	}
 
 	public func printAllPostOrder() {
@@ -229,53 +280,6 @@ class BinarySearchTree<T: Comparable> {
 		}
 		print(allData)
 	}
-
-
-	public func transversePostOrder(_ onVisit: (T)->Void) {
-		traversePostOrder(root, onVisit)
-	}
-
-	private func traversePostOrder(_ node: BinarySearchTreeNode<T>?, _ onVisit: (T) -> Void) {
-		guard let theNode = node else { return }
-		traversePostOrder(theNode.rightChild, onVisit)
-		onVisit(theNode.data)
-		traversePostOrder(theNode.leftChild, onVisit)
-	}
-
-
-	func getMinimum() -> T? {
-		return getMinimum(root)
-	}
-
-	private func getMinimum(_ node: BinarySearchTreeNode<T>?) -> T? {
-		guard let theNode = node else { return nil }
-
-		if let theLeftNode = theNode.leftChild {
-			return getMinimum(theLeftNode)
-		}
-
-		return theNode.data
-	}
-
-	func getMaximum() -> T? {
-		return getMaximum(root)
-	}
-
-	private func getMaximum(_ node: BinarySearchTreeNode<T>?) -> T? {
-		guard let theNode = node else { return nil }
-
-		if let theRightNode = theNode.rightChild {
-			return getMaximum(theRightNode)
-		}
-
-		return theNode.data
-	}
-
-
-	private func rebalance(_ node: BinarySearchTreeNode<T>?) {
-
-	}
-
 
 }
 

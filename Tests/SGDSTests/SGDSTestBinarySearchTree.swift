@@ -76,10 +76,10 @@ class SGDSTestBinarySearchTree: XCTestCase {
 
 	func testBinarySearchTreeInsertAndBalanceCheck3() {
 		let tree = BinarySearchTree<Int>()
-		tree.insertData(5)
+		tree.insertData(1)
 		tree.insertData(2)
-		tree.insertData(3)
 		tree.insertData(4)
+		tree.insertData(3)
 
 
 		print("\(tree)")
